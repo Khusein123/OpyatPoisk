@@ -8,8 +8,8 @@ from monitor import MonitorManager
 from userauth import UserAuth
 from menu import MenuBuilder
 import os
-TOKEN = os.getenv("7905547591:AAEivoneinmUDRtg7hvBkGPEPPAegMC36uc")
-CHAT_ID = os.getenv("5292727929")
+TOKEN = "7905547591:AAEivoneinmUDRtg7hvBkGPEPPAegMC36uc"
+CHAT_ID = "5292727929"
 bot = telebot.TeleBot(TOKEN)
 
 auth = UserAuth()
