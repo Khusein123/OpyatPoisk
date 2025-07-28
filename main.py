@@ -5,7 +5,8 @@ import time
 from flask import Flask
 from keep_alive import keep_alive
 from monitor import MonitorManager
-from userauth import UserAuth
+import userauth
+userauth.register_handlers(bot)
 from menu import MenuBuilder
 import os
 TOKEN = "7905547591:AAEivoneinmUDRtg7hvBkGPEPPAegMC36uc"
