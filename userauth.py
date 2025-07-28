@@ -1,41 +1,42 @@
-import time
-import random
+from telebot.types import Message
+import secrets
 import string
 import json
-import os
+import time
 
-class UserAuth:
-    def __init__(self):
-        self.file = "user_keys.json"
-        if os.path.exists(self.file):
-            with open(self.file, "r", encoding="utf-8") as f:
-                self.data = json.load(f)
-        else:
-            self.data = {}
+KEY_FILE = "keys.json"
+ADMIN_ID = 5292727929  # ваш Telegram chat_id
 
-    def save(self):
-        with open(self.file, "w", encoding="utf-8") as f:
-            json.dump(self.data, f, ensure_ascii=False, indent=2)
+def save_keys(keys):
+    with open(KEY_FILE, "w") as f:
+        json.dump(keys, f)
 
-    def generate_key(self, duration_days=30):
-        key = ''.join(random.choices(string.ascii_uppercase + string.digits, k=12))
-        expire = int(time.time()) + duration_days * 86400
-        self.data[key] = {"user_id": None, "expire": expire}
-        self.save()
-        return key
+def load_keys():
+    try:
+        with open(KEY_FILE, "r") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {}
 
-    def activate_key(self, user_id, key):
-        if key in self.data and self.data[key]["user_id"] is None:
-            self.data[key]["user_id"] = user_id
-            self.save()
-            return "✅ Ключ успешно активирован!"
-        elif key in self.data and self.data[key]["user_id"] == user_id:
-            return "✅ Ключ уже активирован вами."
-        return "❌ Неверный или уже использованный ключ."
+@bot.message_handler(commands=['genkey'])
+def handle_genkey(message: Message):
+    if message.chat.id != ADMIN_ID:
+        bot.reply_to(message, "У вас нет доступа к этой команде.")
+        return
 
-    def is_key_active(self, user_id):
-        now = int(time.time())
-        for key, val in self.data.items():
-            if val["user_id"] == user_id and val["expire"] > now:
-                return True
-        return False
+    args = message.text.split()
+    if len(args) != 2 or args[1] not in ["7", "30", "365"]:
+        bot.reply_to(message, "Используйте: /genkey 7 или /genkey 30 или /genkey 365")
+        return
+
+    days = int(args[1])
+    duration_seconds = days * 86400
+    expire_at = int(time.time()) + duration_seconds
+
+    key = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(20))
+
+    keys = load_keys()
+    keys[key] = {"expire": expire_at, "activated_by": None}
+    save_keys(keys)
+
+    bot.reply_to(message, f"✅ Ключ на {days} дней создан:\n`{key}`", parse_mode="Markdown")
